@@ -21,6 +21,7 @@ library
   hs-source-dirs:                           lib
   ghc-options:                              -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
   build-depends:                            base >= 4.7 && < 5
+                                          , bytestring
   exposed-modules:                          Cryptopals
 
 executable cryptopals-app
@@ -40,4 +41,5 @@ test-suite cryptopals-test
   other-modules:                            CryptopalsSpec
   build-depends:                            base >= 4.7 && < 5
                                           , cryptopals
+                                          , hspec
 
