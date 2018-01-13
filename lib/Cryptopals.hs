@@ -5,13 +5,17 @@
 module Cryptopals
     ( base64Encode
     , fromHexString
+    , hexEncode
+    , toChars
+    , xorBytes
     ) where
 
-import           Data.Bits ((.&.), shift)
+import           Data.Bits ((.&.), shift, xor)
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as Char8 (pack, unpack)
 import           Data.Char (toLower)
 import           Data.List (elemIndex)
+import           Text.Printf (printf)
 
 -- |Encode a hexadecimal-encoded string as a blob of bytes
 fromHexString ::
@@ -36,7 +40,10 @@ base64Chars =
             (foldr (:)
                 "+/" ['0'..'9']) ['a'..'z']) ['A'..'Z']
 
-toChars :: ByteString -> String
+-- |Unpack blob of bytes as string
+toChars ::
+    ByteString  -- ^ Blob of bytes
+    -> String   -- ^ String
 toChars = Char8.unpack
 
 -- |Encode blob of bytes using Base64 encoding
@@ -78,3 +85,17 @@ encodeChunk3 c0 c1 c2 =
         i2 = shift (x1 .&. 0x0f) 2 + shift (x2 .&. 0xc0) (-6)
         i3 = x2 .&. 0x3f
     in base64Chars !! i0 : base64Chars !! i1 : base64Chars !! i2 : base64Chars !! i3 : []
+
+-- |Hex-encode a blob of bytes
+hexEncode ::
+    ByteString  -- ^ Blob of bytes
+    -> String   -- ^ Result
+hexEncode bytes = concat $ map (\x -> printf "%02x" x) (toChars bytes)
+
+-- |Evaluate elementwise XOR of two byte blobs
+-- See <http://cryptopals.com/sets/1/challenges/2>
+xorBytes ::
+    ByteString      -- ^ First blob of bytes
+    -> ByteString   -- ^ Second blob of bytes
+    -> ByteString   -- ^ Result
+xorBytes bytes0 bytes1 = Char8.pack $ map toEnum (zipWith xor (map fromEnum $ toChars bytes0) (map fromEnum $ toChars bytes1))

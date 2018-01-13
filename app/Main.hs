@@ -5,8 +5,11 @@
 module Main (main) where
 
 import Cryptopals
+import Imports
 
 main :: IO ()
 main = do
-    let Just bytes = fromHexString "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d"
-    print $ base64Encode bytes
+    let op0 = fromJust $ fromHexString "1c0111001f010100061a024b53535009181c"
+        op1 = fromJust $ fromHexString "686974207468652062756c6c277320657965"
+        result = xorBytes op0 op1
+    print $ hexEncode result

@@ -31,6 +31,7 @@ executable cryptopals-app
   ghc-options:                              -threaded -rtsopts -with-rtsopts=-N -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
   build-depends:                            base >= 4.7 && < 5
                                           , cryptopals
+  other-modules:                            Imports
 
 test-suite cryptopals-test
   type:                                     exitcode-stdio-1.0
