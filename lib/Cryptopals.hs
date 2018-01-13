@@ -4,17 +4,21 @@
 
 module Cryptopals
     ( base64Encode
+    , decryptIfPrintOrSpace
     , decryptXORString
     , fromHexString
     , hexEncode
+    , mostCommonChar
     , toChars
     , xorBytes
+    , xorKey
+    , xorString
     ) where
 
 import           Data.Bits ((.&.), shift, xor)
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as Char8 (pack, unpack)
-import           Data.Char (toLower)
+import           Data.Char (isPrint, isSpace, toLower)
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HashMap
 import           Data.List (elemIndex)
@@ -128,7 +132,7 @@ decryptXORString plaintext bytes = do
     maxCipherChar <- mostCommonChar ciphertext
 
     -- Compute the key
-    let key = xor (fromEnum maxPlainChar) (fromEnum maxCipherChar)
+    let key = xorKey maxPlainChar maxCipherChar
 
     -- Decrypt the string
     return $ xorString key ciphertext
@@ -142,9 +146,35 @@ mostCommonChar s =
     let (c, _) = HashMap.foldlWithKey' (\p@(_, n) c' n' -> if n' > n then (c', n') else p) (' ', -1) (scoreText s)
     in Just c
 
+-- |Compute XOR of two characters
+xorKey ::
+    Char    -- ^ First character
+    -> Char -- ^ Second character
+    -> Int  -- ^ Result
+xorKey c0 c1 = xor (fromEnum c0) (fromEnum c1)
+
 -- |Apply an XOR key to a string
 xorString ::
     Int         -- ^ XOR key
     -> String   -- ^ String
     -> String   -- ^ Result
 xorString key s = map (toEnum . xor key . fromEnum) s
+
+-- |Decrypt string if result is all printable characters
+-- See <http://cryptopals.com/sets/1/challenges/4>
+decryptIfPrintOrSpace ::
+    Char            -- ^ Most common plaintext character
+    -> String       -- ^ Hex-encoded ciphertext
+    -> Maybe String -- ^ @Just@ a decrypted string if printable otherwise @Nothing@
+decryptIfPrintOrSpace mcpc line = do
+    bytes <- fromHexString line
+    let ciphertext = toChars bytes
+    c <- mostCommonChar ciphertext
+    let key = xorKey mcpc c
+        decryptedText = xorString key ciphertext
+    if all isPrintOrSpace decryptedText
+        then Just decryptedText
+        else Nothing
+
+isPrintOrSpace :: Char -> Bool
+isPrintOrSpace x = isPrint x || isSpace x

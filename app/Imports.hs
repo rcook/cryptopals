@@ -3,7 +3,8 @@
 --------------------------------------------------
 
 module Imports
-    ( fromJust
+    ( catMaybes
+    , fromJust
     ) where
 
-import           Data.Maybe (fromJust)
+import           Data.Maybe
