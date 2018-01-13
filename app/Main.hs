@@ -5,13 +5,12 @@
 module Main (main) where
 
 import Cryptopals
-import Imports
-import Paths_cryptopals
 
 main :: IO ()
 main = do
-    let plaintext = "The ineffable talent for finding patterns in chaos cannot do its thing unless he immerses himself in the chaos first. If they do contain patterns, he does not see them just now, in any rational way. But there may be some subrational part of his mind that can go to work, now that the letters have passed before his eyes and through his pencil, and that may suddenly present him with a gift-wrapped clue--or even a full solution--a few weeks from now while he is shaving or antenna-twiddling."
-        mostCommonPlaintextChar = fromJust $ mostCommonChar plaintext
-    dataPath <- getDataFileName "4.txt"
-    content <- readFile dataPath
-    print $ catMaybes (map (decryptIfPrintOrSpace mostCommonPlaintextChar) (lines content))
+    let plaintext = "Burning 'em, if you ain't quick and nimble\n\
+                    \I go crazy when I hear a cymbal"
+    print $ hexEncodeString (repeatingXOREncode "ICE" plaintext)
+                ==
+                    "0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272\
+                    \a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"

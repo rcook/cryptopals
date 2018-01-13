@@ -8,7 +8,9 @@ module Cryptopals
     , decryptXORString
     , fromHexString
     , hexEncode
+    , hexEncodeString
     , mostCommonChar
+    , repeatingXOREncode
     , toChars
     , xorBytes
     , xorKey
@@ -97,7 +99,13 @@ encodeChunk3 c0 c1 c2 =
 hexEncode ::
     ByteString  -- ^ Blob of bytes
     -> String   -- ^ Result
-hexEncode bytes = concat $ map (\x -> printf "%02x" x) (toChars bytes)
+hexEncode bytes = concat $ map (printf "%02x") (toChars bytes)
+
+-- |Hex-encode a string
+hexEncodeString ::
+    String      -- ^ String
+    -> String   -- ^ Result
+hexEncodeString s = concat $ map (printf "%02x") s
 
 -- |Evaluate elementwise XOR of two byte blobs
 -- See <http://cryptopals.com/sets/1/challenges/2>
@@ -178,3 +186,14 @@ decryptIfPrintOrSpace mcpc line = do
 
 isPrintOrSpace :: Char -> Bool
 isPrintOrSpace x = isPrint x || isSpace x
+
+-- |Encode string using repeating-key XOR key
+-- See <http://cryptopals.com/sets/1/challenges/5>
+repeatingXOREncode ::
+    String      -- ^ Key
+    -> String   -- ^ Plaintext
+    -> String   -- ^ Ciphertext
+repeatingXOREncode key = zipWith xorChar (cycle key)
+
+xorChar :: Char -> Char -> Char
+xorChar c0 c1 = toEnum (xor (fromEnum c0) (fromEnum c1))
