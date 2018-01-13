@@ -1,0 +1,43 @@
+
+name:                                       cryptopals
+version:                                    0.1.0.0
+homepage:                                   https://github.com/rcook/cryptopals#readme
+license:                                    MIT
+license-file:                               LICENSE
+author:                                     Richard Cook
+maintainer:                                 rcook@rcook.org
+copyright:                                  2018 Richard Cook
+category:                                   Command Line
+build-type:                                 Simple
+cabal-version:                              >= 1.10
+extra-source-files:                         README.md
+
+source-repository head
+  type:                                     git
+  location:                                 https://github.com/rcook/cryptopals.git
+
+library
+  default-language:                         Haskell2010
+  hs-source-dirs:                           lib
+  ghc-options:                              -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
+  build-depends:                            base >= 4.7 && < 5
+  exposed-modules:                          Cryptopals
+
+executable cryptopals-app
+  default-language:                         Haskell2010
+  hs-source-dirs:                           app
+  main-is:                                  Main.hs
+  ghc-options:                              -threaded -rtsopts -with-rtsopts=-N -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
+  build-depends:                            base >= 4.7 && < 5
+                                          , cryptopals
+
+test-suite cryptopals-test
+  type:                                     exitcode-stdio-1.0
+  default-language:                         Haskell2010
+  hs-source-dirs:                           test
+  main-is:                                  Spec.hs
+  ghc-options:                              -threaded -rtsopts -with-rtsopts=-N -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
+  other-modules:                            CryptopalsSpec
+  build-depends:                            base >= 4.7 && < 5
+                                          , cryptopals
+
