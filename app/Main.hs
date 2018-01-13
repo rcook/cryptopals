@@ -9,7 +9,12 @@ import Imports
 
 main :: IO ()
 main = do
-    let op0 = fromJust $ fromHexString "1c0111001f010100061a024b53535009181c"
-        op1 = fromJust $ fromHexString "686974207468652062756c6c277320657965"
-        result = xorBytes op0 op1
-    print $ hexEncode result
+    let
+        -- Some known plaintext
+        plaintext = "The ineffable talent for finding patterns in chaos cannot do its thing unless he immerses himself in the chaos first. If they do contain patterns, he does not see them just now, in any rational way. But there may be some subrational part of his mind that can go to work, now that the letters have passed before his eyes and through his pencil, and that may suddenly present him with a gift-wrapped clue--or even a full solution--a few weeks from now while he is shaving or antenna-twiddling."
+
+        -- The ciphertext
+        cipherBytes = fromJust $ fromHexString "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
+
+    -- Show the result
+    print $ decryptXORString plaintext cipherBytes

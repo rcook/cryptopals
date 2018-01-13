@@ -4,6 +4,7 @@
 
 module Cryptopals
     ( base64Encode
+    , decryptXORString
     , fromHexString
     , hexEncode
     , toChars
@@ -14,6 +15,8 @@ import           Data.Bits ((.&.), shift, xor)
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as Char8 (pack, unpack)
 import           Data.Char (toLower)
+import           Data.HashMap.Strict (HashMap)
+import qualified Data.HashMap.Strict as HashMap
 import           Data.List (elemIndex)
 import           Text.Printf (printf)
 
@@ -99,3 +102,49 @@ xorBytes ::
     -> ByteString   -- ^ Second blob of bytes
     -> ByteString   -- ^ Result
 xorBytes bytes0 bytes1 = Char8.pack $ map toEnum (zipWith xor (map fromEnum $ toChars bytes0) (map fromEnum $ toChars bytes1))
+
+-- |Given a string, computes character frequency map
+scoreText ::
+    String              -- ^ String
+    -> HashMap Char Int -- ^ Map
+scoreText =
+    foldr
+        (\c m -> let k = toLower c in HashMap.insertWith (\_ x -> x + 1) k 1 m)
+        HashMap.empty
+
+-- |Determine XOR key based on character frequencies of plaintext and decrypt ciphertext
+-- See <http://cryptopals.com/sets/1/challenges/3>
+decryptXORString ::
+    String          -- ^ Plaintext
+    -> ByteString   -- ^ Ciphertext
+    -> Maybe String -- ^ Decrypted text
+decryptXORString plaintext bytes = do
+    let ciphertext = toChars bytes
+
+    -- Score known plaintext
+    maxPlainChar <- mostCommonChar plaintext
+
+    -- Score ciphertext
+    maxCipherChar <- mostCommonChar ciphertext
+
+    -- Compute the key
+    let key = xor (fromEnum maxPlainChar) (fromEnum maxCipherChar)
+
+    -- Decrypt the string
+    return $ xorString key ciphertext
+
+-- |Given a string, gets most frequent character
+mostCommonChar ::
+    String          -- ^ String
+    -> Maybe Char   -- ^ Most frequent character
+mostCommonChar [] = Nothing
+mostCommonChar s =
+    let (c, _) = HashMap.foldlWithKey' (\p@(_, n) c' n' -> if n' > n then (c', n') else p) (' ', -1) (scoreText s)
+    in Just c
+
+-- |Apply an XOR key to a string
+xorString ::
+    Int         -- ^ XOR key
+    -> String   -- ^ String
+    -> String   -- ^ Result
+xorString key s = map (toEnum . xor key . fromEnum) s
