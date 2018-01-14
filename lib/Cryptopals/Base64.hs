@@ -11,8 +11,11 @@ module Cryptopals.Base64
 import           Data.Bits ((.&.), shift)
 
 newtype Base64String = Base64String
-    { unBase64String :: String
-    } deriving (Eq, Show)
+    { unBase64String ::String
+    } deriving Eq
+
+instance Show Base64String where
+    show (Base64String s) = s
 
 base64Chars :: String
 base64Chars =

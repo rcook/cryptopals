@@ -16,7 +16,10 @@ import           Text.Printf (printf)
 data HexString = HexString
     { _hsSource :: String
     , _hsEncoded :: String
-    } deriving (Eq, Show)
+    } deriving Eq
+
+instance Show HexString where
+    show (HexString _ encoded) = encoded
 
 hexChars :: String
 hexChars = "0123456789abcdef"

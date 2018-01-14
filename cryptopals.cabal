@@ -32,9 +32,9 @@ library
                                           , Cryptopals.Util
                                           , Cryptopals.XOR
 
-executable cryptopals-app
+executable scratch
   default-language:                         Haskell2010
-  hs-source-dirs:                           app
+  hs-source-dirs:                           scratch
   main-is:                                  Main.hs
   ghc-options:                              -threaded -rtsopts -with-rtsopts=-N -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
   build-depends:                            base >= 4.7 && < 5
@@ -42,6 +42,15 @@ executable cryptopals-app
                                           , cryptopals
                                           , hspec
                                           , split
+  other-modules:                            Imports
+
+executable s01c01
+  default-language:                         Haskell2010
+  hs-source-dirs:                           s01c01
+  main-is:                                  Main.hs
+  ghc-options:                              -threaded -rtsopts -with-rtsopts=-N -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
+  build-depends:                            base >= 4.7 && < 5
+                                          , cryptopals
   other-modules:                            Imports
 
 test-suite cryptopals-test
