@@ -4,6 +4,7 @@ module Cryptopals.Algos
     , defaultIV
     , detectAES128ECB
     , hamming
+    , padPKCS7
     , repeatingXOREncode
     ) where
 
@@ -71,3 +72,12 @@ detectAES128ECB xs =
     maximumBy
         (compare `on` snd)
         $ zip (zip [0..] xs) (map aes128ECBScore xs)
+
+padPKCS7 :: Int -> String -> Maybe String
+padPKCS7 n s =
+    let count = length s
+        padding = n - count
+    in
+        if padding < 0
+            then Nothing
+            else Just $ s ++ take padding (repeat (chr padding))

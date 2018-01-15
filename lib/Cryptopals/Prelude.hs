@@ -1,6 +1,7 @@
 module Cryptopals.Prelude
     ( catMaybes
     , chunksOf
+    , chr
     , forM_
     , fromJust
     , maximumBy
@@ -9,6 +10,7 @@ module Cryptopals.Prelude
     ) where
 
 import           Control.Monad
+import           Data.Char
 import           Data.Function
 import           Data.List
 import           Data.List.Split

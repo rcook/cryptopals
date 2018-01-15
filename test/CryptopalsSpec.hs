@@ -119,3 +119,17 @@ spec = do
             let ((index, _), score) = detectAES128ECB xs
             index `shouldBe` 132
             score `shouldBe` 0.4
+
+    describe "padPKCS7" $ do
+        it "evaluates to Nothing if padding negative" $
+            padPKCS7 (-1) "foo" `shouldBe` Nothing
+        it "evaluates to Nothing if padding insufficient" $
+            padPKCS7 2 "foo" `shouldBe` Nothing
+        it "adds no characters if no padding required" $
+            padPKCS7 3 "foo" `shouldBe` Just "foo"
+        it "adds 1 characters if 1 padding required" $
+            padPKCS7 4 "foo" `shouldBe` Just "foo\x01"
+        it "adds 2 characters if 2 padding required" $
+            padPKCS7 5 "foo" `shouldBe` Just "foo\x02\x02"
+        it "works on test example" $
+            padPKCS7 20 "YELLOW SUBMARINE" `shouldBe` Just "YELLOW SUBMARINE\x04\x04\x04\x04"
