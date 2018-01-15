@@ -6,6 +6,8 @@ import qualified Data.ByteString.Lazy.Char8 as Lazy (pack)
 
 main :: IO ()
 main = do
+    putStrLn "Set 1 challenge 7"
+
     Just s <- readBase64DataFile "7.txt"
     let bytes = Lazy.pack s
         key = Char8.pack "YELLOW SUBMARINE"
