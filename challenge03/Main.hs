@@ -4,7 +4,7 @@ import Cryptopals
 
 main :: IO ()
 main = do
-    putStrLn "Set 1 challenge 3"
+    putStrLn "challenge03"
 
     let
         -- Some known plaintext

@@ -4,7 +4,7 @@ import Cryptopals
 
 main :: IO ()
 main = do
-    putStrLn "Set 1 challenge 2"
+    putStrLn "challenge02"
 
     let s0 = fromJust $ hexString "1c0111001f010100061a024b53535009181c"
         s1 = fromJust $ hexString "686974207468652062756c6c277320657965"
