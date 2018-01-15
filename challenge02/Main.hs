@@ -1,3 +1,5 @@
+-- http://cryptopals.com/sets/1/challenges/2
+
 module Main (main) where
 
 import Cryptopals
