@@ -2,7 +2,6 @@ module Main (main) where
 
 import Cryptopals
 import Paths_cryptopals
-import S01C04
 
 tryDecrypt :: Char -> String -> Maybe String
 tryDecrypt plainChar ciphertext = do

@@ -1,4 +1,4 @@
-module Imports
+module Cryptopals.Prelude
     ( catMaybes
     , fromJust
     ) where

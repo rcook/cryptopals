@@ -29,6 +29,7 @@ library
                                           , Cryptopals.Algos
                                           , Cryptopals.Base64
                                           , Cryptopals.Hex
+                                          , Cryptopals.Prelude
                                           , Cryptopals.Util
                                           , Cryptopals.XOR
 
@@ -42,7 +43,6 @@ executable scratch
                                           , cryptopals
                                           , hspec
                                           , split
-  other-modules:                            Imports
 
 executable s01c01
   default-language:                         Haskell2010
@@ -51,7 +51,6 @@ executable s01c01
   ghc-options:                              -threaded -rtsopts -with-rtsopts=-N -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
   build-depends:                            base >= 4.7 && < 5
                                           , cryptopals
-  other-modules:                            Imports
 
 executable s01c02
   default-language:                         Haskell2010
@@ -60,7 +59,6 @@ executable s01c02
   ghc-options:                              -threaded -rtsopts -with-rtsopts=-N -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
   build-depends:                            base >= 4.7 && < 5
                                           , cryptopals
-  other-modules:                            Imports
 
 executable s01c03
   default-language:                         Haskell2010
@@ -69,7 +67,6 @@ executable s01c03
   ghc-options:                              -threaded -rtsopts -with-rtsopts=-N -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
   build-depends:                            base >= 4.7 && < 5
                                           , cryptopals
-  other-modules:                            Imports
 
 executable s01c04
   default-language:                         Haskell2010
@@ -78,7 +75,6 @@ executable s01c04
   ghc-options:                              -threaded -rtsopts -with-rtsopts=-N -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
   build-depends:                            base >= 4.7 && < 5
                                           , cryptopals
-  other-modules:                            S01C04
 
 test-suite cryptopals-test
   type:                                     exitcode-stdio-1.0
@@ -90,4 +86,3 @@ test-suite cryptopals-test
   build-depends:                            base >= 4.7 && < 5
                                           , cryptopals
                                           , hspec
-

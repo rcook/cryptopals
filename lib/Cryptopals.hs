@@ -6,6 +6,7 @@ module Cryptopals
     ( module Cryptopals.Algos
     , module Cryptopals.Base64
     , module Cryptopals.Hex
+    , module Cryptopals.Prelude
     , module Cryptopals.Util
     , module Cryptopals.XOR
     ) where
@@ -13,5 +14,6 @@ module Cryptopals
 import Cryptopals.Algos
 import Cryptopals.Base64
 import Cryptopals.Hex
+import Cryptopals.Prelude
 import Cryptopals.Util
 import Cryptopals.XOR
