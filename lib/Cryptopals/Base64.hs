@@ -7,12 +7,14 @@ module Cryptopals.Base64
     , base64Decode
     , base64Encode
     , base64String
+    , readBase64DataFile
     ) where
 
 import           Cryptopals.Prelude
 import           Data.Bits ((.&.), shift)
 import           Data.Char (chr)
 import           Data.List (elemIndex)
+import           Paths_cryptopals
 
 newtype Base64String = Base64String
     { unBase64String ::String
@@ -101,3 +103,11 @@ base64DecodeHelper :: String -> [String]
 base64DecodeHelper [] = []
 base64DecodeHelper (c0 : c1 : c2 : c3 : cs) = decodeChunk c0 c1 c2 c3 : base64DecodeHelper cs
 base64DecodeHelper _ = error "Invalid Base64-encoded string"
+
+readBase64DataFile :: FilePath -> IO (Maybe String)
+readBase64DataFile fileName = do
+        dataPath <- getDataFileName fileName
+        xs <- (concat . lines) <$> readFile dataPath
+        case base64String xs of
+            Nothing -> return Nothing
+            Just base64 -> return (Just $ base64Decode base64)
