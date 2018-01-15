@@ -48,6 +48,12 @@ decryptAES128ECB key iv bytes
     | Char8.length iv /= 16 = Nothing
     | otherwise = Just $ crypt ECB key iv Decrypt bytes
 
+encryptAES128ECB :: ByteString -> ByteString -> Lazy.ByteString -> Maybe Lazy.ByteString
+encryptAES128ECB key iv bytes
+    | Char8.length key /= 16 = Nothing
+    | Char8.length iv /= 16 = Nothing
+    | otherwise = Just $ crypt ECB key iv Encrypt bytes
+
 score :: Int -> String -> Double
 score chunkSize ciphertext =
     let
