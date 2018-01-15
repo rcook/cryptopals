@@ -2,6 +2,7 @@ module Cryptopals.Prelude
     ( catMaybes
     , chunksOf
     , chr
+    , foldl'
     , forM_
     , fromJust
     , isPrint
@@ -12,6 +13,7 @@ module Cryptopals.Prelude
     , popCount
     , toLower
     , toUpper
+    , unfoldr
     , xor
     ) where
 
