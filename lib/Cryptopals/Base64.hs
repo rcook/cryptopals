@@ -12,7 +12,6 @@ module Cryptopals.Base64
 
 import           Cryptopals.Prelude
 import           Data.Bits ((.&.), shift)
-import           Data.Char (chr)
 import           Data.List (elemIndex)
 import           Paths_cryptopals
 

@@ -12,7 +12,6 @@ import           Codec.Crypto.SimpleAES (Direction(..), Mode(..), crypt)
 import           Cryptopals.Prelude
 import           Cryptopals.Util
 import           Cryptopals.XOR
-import           Data.Bits (popCount, xor)
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as Char8 (length, replicate)
 import qualified Data.ByteString.Lazy as Lazy (ByteString)

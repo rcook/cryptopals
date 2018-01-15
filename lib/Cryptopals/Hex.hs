@@ -9,7 +9,7 @@ module Cryptopals.Hex
     , hexString
     ) where
 
-import           Data.Char (chr, toLower)
+import           Cryptopals.Prelude
 import           Data.List (elemIndex)
 import           Text.Printf (printf)
 

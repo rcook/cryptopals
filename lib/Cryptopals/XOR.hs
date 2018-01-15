@@ -8,8 +8,7 @@ module Cryptopals.XOR
     , xorStrings
     ) where
 
-import           Data.Bits (xor)
-import           Data.Char (chr)
+import           Cryptopals.Prelude
 
 xorChars :: Char -> Char -> Char
 xorChars c0 c1 = chr (xor (fromEnum c0) (fromEnum c1))

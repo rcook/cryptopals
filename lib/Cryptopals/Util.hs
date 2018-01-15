@@ -7,7 +7,7 @@ module Cryptopals.Util
     , mostCommonChar
     ) where
 
-import           Data.Char (isPrint, isSpace)
+import           Cryptopals.Prelude
 import           Data.HashMap.Strict (HashMap)
 import qualified Data.HashMap.Strict as HashMap
 

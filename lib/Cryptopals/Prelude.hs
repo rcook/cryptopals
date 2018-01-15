@@ -4,12 +4,19 @@ module Cryptopals.Prelude
     , chr
     , forM_
     , fromJust
+    , isPrint
+    , isSpace
     , maximumBy
     , minimumBy
     , on
+    , popCount
+    , toLower
+    , toUpper
+    , xor
     ) where
 
 import           Control.Monad
+import           Data.Bits
 import           Data.Char
 import           Data.Function
 import           Data.List
