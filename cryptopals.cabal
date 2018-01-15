@@ -24,6 +24,7 @@ library
   ghc-options:                              -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
   build-depends:                            base >= 4.7 && < 5
                                           , bytestring
+                                          , split
                                           , unordered-containers
   exposed-modules:                          Cryptopals
                                           , Cryptopals.Algos
@@ -88,7 +89,6 @@ executable s01c06
   ghc-options:                              -threaded -rtsopts -with-rtsopts=-N -W -Wall -fwarn-incomplete-patterns -fwarn-unused-imports
   build-depends:                            base >= 4.7 && < 5
                                           , cryptopals
-                                          , split
 
 test-suite cryptopals-test
   type:                                     exitcode-stdio-1.0

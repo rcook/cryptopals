@@ -3,8 +3,6 @@ module Main (main) where
 
 import Cryptopals
 import Data.List (minimumBy, transpose)
-import Data.List.Split (chunksOf)
-import Data.Maybe (fromJust)
 import Paths_cryptopals
 
 normalizedDist :: Int -> String -> Double
