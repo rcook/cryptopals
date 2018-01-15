@@ -4,11 +4,15 @@
 
 module Cryptopals.Base64
     ( Base64String(unBase64String)
+    , base64Decode
     , base64Encode
     , base64String
     ) where
 
+import           Cryptopals.Prelude
 import           Data.Bits ((.&.), shift)
+import           Data.Char (chr)
+import           Data.List (elemIndex)
 
 newtype Base64String = Base64String
     { unBase64String ::String
@@ -63,3 +67,37 @@ encodeChunk3 c0 c1 c2 =
         i2 = shift (x1 .&. 0x0f) 2 + shift (x2 .&. 0xc0) (-6)
         i3 = x2 .&. 0x3f
     in base64Chars !! i0 : base64Chars !! i1 : base64Chars !! i2 : base64Chars !! i3 : []
+
+decodeChunk :: Char -> Char -> Char -> Char -> String
+decodeChunk c0 c1 '=' '=' =
+    let i0 = decodeOctet c0
+        i1 = decodeOctet c1
+        x0 = (i0 `shift` 2) + ((i1 .&. 0x30) `shift` (-4))
+    in chr x0 : []
+decodeChunk c0 c1 c2 '=' =
+    let i0 = decodeOctet c0
+        i1 = decodeOctet c1
+        i2 = decodeOctet c2
+        x0 = (i0 `shift` 2) + ((i1 .&. 0x30) `shift` (-4))
+        x1 = ((i1 .&. 0x0f) `shift` 4) + ((i2 .&. 0x3c) `shift` (-2))
+    in chr x0 : chr x1 : []
+decodeChunk c0 c1 c2 c3 =
+    let i0 = decodeOctet c0
+        i1 = decodeOctet c1
+        i2 = decodeOctet c2
+        i3 = decodeOctet c3
+        x0 = (i0 `shift` 2) + ((i1 .&. 0x30) `shift` (-4))
+        x1 = ((i1 .&. 0x0f) `shift` 4) + ((i2 .&. 0x3c) `shift` (-2))
+        x2 = ((i2 .&. 0x03) `shift` 6) + i3
+    in chr x0 : chr x1 : chr x2 : []
+
+decodeOctet :: Char -> Int
+decodeOctet c = fromJust $ c `elemIndex` base64Chars
+
+base64Decode :: Base64String -> String
+base64Decode s = concat (base64DecodeHelper (unBase64String s))
+
+base64DecodeHelper :: String -> [String]
+base64DecodeHelper [] = []
+base64DecodeHelper (c0 : c1 : c2 : c3 : cs) = decodeChunk c0 c1 c2 c3 : base64DecodeHelper cs
+base64DecodeHelper _ = error "Invalid Base64-encoded string"

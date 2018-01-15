@@ -86,3 +86,22 @@ spec = do
                 `shouldBe`
                     (fromJust $ hexString ("0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272\
                                             \a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f"))
+
+    describe "hamming" $
+        it "matches expected value" $
+            hamming "this is a test" "wokka wokka!!!" `shouldBe` 37
+
+    describe "base64Decode" $ do
+        it "roundtrips" $ do
+            dataPath <- getDataFileName "6.txt"
+            content <- readFile dataPath
+            let e = fromJust (base64String $ concat (lines content))
+                s = base64Decode e
+                encoded = base64Encode s
+            encoded `shouldBe` e
+        it "decodes 4 octets no padding" $
+            base64Decode (fromJust $ base64String "TWFu") `shouldBe` "Man"
+        it "decodes 4 octets 1 padding" $
+            base64Decode (fromJust $ base64String "TWE=") `shouldBe` "Ma"
+        it "decodes 4 octets 2 padding" $
+            base64Decode (fromJust $ base64String "TQ==") `shouldBe` "M"
