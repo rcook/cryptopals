@@ -2,6 +2,7 @@ module Cryptopals.Algos
     ( AESIV
     , AESKey
     , Mode(..)
+    , aesChunkSize
     , aesIV
     , aesKey
     , decryptXORString
