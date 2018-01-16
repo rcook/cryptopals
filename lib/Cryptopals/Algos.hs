@@ -1,27 +1,38 @@
 module Cryptopals.Algos
-    ( decryptXORString
-    , decryptAES128ECB
-    , decryptAES128ECBStrictUnsafe
+    ( AESIV
+    , AESKey
+    , Mode(..)
+    , aesIV
+    , aesKey
+    , decryptXORString
     , decryptCBC
-    , defaultIV
-    , detectAES128ECB
-    , encryptAES128ECB
-    , encryptAES128ECBStrictUnsafe
+    , decryptECB
+    , detectECB
+    , ecbScore
     , encryptCBC
+    , encryptECB
+    , encryptionOracle
     , hamming
+    , newAESIV
+    , newAESKey
     , padPKCS7
     , repeatingXOREncode
+    , zeroIV
     ) where
 
 import           Codec.Crypto.SimpleAES (Direction(..), Mode(..), crypt)
 import           Cryptopals.Prelude
 import           Cryptopals.Util
 import           Cryptopals.XOR
-import qualified Data.ByteString as ByteString (concat)
+import qualified Data.ByteString as ByteString (concat, length)
 import           Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString.Char8 as Char8 (length, replicate)
-import qualified Data.ByteString.Lazy as Lazy (ByteString, fromStrict, toStrict)
+import qualified Data.ByteString.Char8 as Char8 (pack, replicate)
+import qualified Data.ByteString.Lazy as Lazy (fromStrict, toStrict)
 import qualified Data.HashMap.Strict as HashMap (empty, insertWith)
+import           System.Random (Random, RandomGen, random, randomR)
+
+newtype AESKey = AESKey ByteString deriving Show
+newtype AESIV = AESIV ByteString deriving Show
 
 decryptXORString :: String -> String -> Maybe String
 decryptXORString plaintext ciphertext = do
@@ -45,30 +56,13 @@ hamming s0 s1 = sum $ zipWith intHamming (map fromEnum s0) (map fromEnum s1)
     where
     intHamming x0 x1 = popCount $ xor x0 x1
 
-defaultIV :: ByteString
-defaultIV = Char8.replicate 16 '\0'
+decryptECB :: AESKey -> ByteString -> ByteString
+decryptECB (AESKey key) bytes
+    = Lazy.toStrict (crypt ECB key rawZeroIV Decrypt (Lazy.fromStrict bytes))
 
--- TODO: Remove IV argument and hardcode to defaultIV!
-decryptAES128ECB :: ByteString -> ByteString -> Lazy.ByteString -> Maybe Lazy.ByteString
-decryptAES128ECB key iv bytes
-    | Char8.length key /= 16 = Nothing
-    | Char8.length iv /= 16 = Nothing
-    | otherwise = Just $ crypt ECB key iv Decrypt bytes
-
--- TODO: Remove IV argument and hardcode to defaultIV!
-decryptAES128ECBStrictUnsafe :: ByteString -> ByteString -> ByteString -> ByteString
-decryptAES128ECBStrictUnsafe key iv bytes = Lazy.toStrict $ crypt ECB key iv Decrypt (Lazy.fromStrict bytes)
-
--- TODO: Remove IV argument and hardcode to defaultIV!
-encryptAES128ECB :: ByteString -> ByteString -> Lazy.ByteString -> Maybe Lazy.ByteString
-encryptAES128ECB key iv bytes
-    | Char8.length key /= 16 = Nothing
-    | Char8.length iv /= 16 = Nothing
-    | otherwise = Just $ crypt ECB key iv Encrypt bytes
-
--- TODO: Remove IV argument and hardcode to defaultIV!
-encryptAES128ECBStrictUnsafe :: ByteString -> ByteString -> ByteString -> ByteString
-encryptAES128ECBStrictUnsafe key iv bytes = Lazy.toStrict $ crypt ECB key iv Encrypt (Lazy.fromStrict bytes)
+encryptECB :: AESKey -> ByteString -> ByteString
+encryptECB (AESKey key) bytes
+    = Lazy.toStrict (crypt ECB key rawZeroIV Encrypt (Lazy.fromStrict bytes))
 
 score :: Int -> String -> Double
 score chunkSize ciphertext =
@@ -85,14 +79,14 @@ score chunkSize ciphertext =
                 counts
     in fromIntegral num / fromIntegral den
 
-aes128ECBScore :: String -> Double
-aes128ECBScore = score 16
+ecbScore :: String -> Double
+ecbScore = score aesChunkSize
 
-detectAES128ECB :: [String] -> ((Int, String), Double)
-detectAES128ECB xs =
+detectECB :: [String] -> ((Int, String), Double)
+detectECB xs =
     maximumBy
         (compare `on` snd)
-        $ zip (zip [0..] xs) (map aes128ECBScore xs)
+        $ zip (zip [0..] xs) (map ecbScore xs)
 
 padPKCS7 :: Int -> String -> Maybe String
 padPKCS7 n s =
@@ -103,30 +97,81 @@ padPKCS7 n s =
             then Nothing
             else Just $ s ++ take padding (repeat (chr padding))
 
-encryptCBC :: Int -> ByteString -> ByteString -> ByteString
-encryptCBC chunkSize key plaintext =
-    let chunks = byteStringChunksOf chunkSize plaintext
+encryptCBC :: AESKey -> AESIV -> ByteString -> ByteString
+encryptCBC key (AESIV iv) plaintext =
+    let chunks = byteStringChunksOf aesChunkSize plaintext
         (_, resultChunks) =
             foldl'
                 (\(prev, xs) chunk ->
-                    let temp0 = byteStringPadPKCS7Unsafe chunkSize chunk
+                    let temp0 = byteStringPadPKCS7Unsafe aesChunkSize chunk
                         temp1 = byteStringXor prev temp0
-                        ciphertext = encryptAES128ECBStrictUnsafe key defaultIV temp1
+                        ciphertext = encryptECB key temp1
                     in (ciphertext, xs ++ [ciphertext]))
-                (defaultIV, [])
+                (iv, [])
                 chunks
     in ByteString.concat resultChunks
 
-decryptCBC :: Int -> ByteString -> ByteString -> ByteString
-decryptCBC chunkSize key ciphertext =
-    let chunks = byteStringChunksOf chunkSize ciphertext
+decryptCBC :: AESKey -> AESIV -> ByteString -> ByteString
+decryptCBC key (AESIV iv) ciphertext =
+    let chunks = byteStringChunksOf aesChunkSize ciphertext
         (_, resultChunks) =
             foldl'
                 (\(prev, xs) chunk ->
-                    let temp0 = decryptAES128ECBStrictUnsafe key defaultIV chunk
+                    let temp0 = decryptECB key chunk
                         temp1 = byteStringXor prev temp0
-                        plaintext = byteStringUnpadPKCS7Unsafe chunkSize temp1
+                        plaintext = byteStringUnpadPKCS7Unsafe aesChunkSize temp1
                     in (chunk, xs ++ [plaintext]))
-                (defaultIV, [])
+                (iv, [])
                 chunks
     in ByteString.concat resultChunks
+
+randomsN :: (RandomGen a, Random b) => Int -> a -> ([b], a)
+randomsN n g =
+    foldl'
+        (\(items, g') _ -> let (item, g'') = random g' in (items ++ [item], g''))
+        ([], g)
+        [1..n]
+
+aesChunkSize :: Int
+aesChunkSize = 16
+
+rawZeroIV :: ByteString
+rawZeroIV = Char8.replicate aesChunkSize '\0'
+
+zeroIV :: AESIV
+zeroIV = AESIV rawZeroIV
+
+aesKey :: ByteString -> Maybe AESKey
+aesKey s
+    | ByteString.length s /= aesChunkSize = Nothing
+    | otherwise = Just $ AESKey s
+
+newAESKey :: RandomGen a => a -> (AESKey, a)
+newAESKey g =
+    let (cs, g') = randomsN aesChunkSize g
+    in (AESKey $ Char8.pack cs, g')
+
+aesIV :: ByteString -> Maybe AESIV
+aesIV s
+    | ByteString.length s /= aesChunkSize = Nothing
+    | otherwise = Just $ AESIV s
+
+newAESIV :: RandomGen a => a -> (AESIV, a)
+newAESIV g =
+    let (cs, g') = randomsN aesChunkSize g
+    in (AESIV $ Char8.pack cs, g')
+
+randomMode :: RandomGen a => a -> (Mode, a)
+randomMode g =
+    let (isECB, g') = randomR (False, True) g
+    in if isECB then (ECB, g') else (CBC, g')
+
+encryptionOracle :: RandomGen a => a -> ByteString -> (Mode, ByteString, a)
+encryptionOracle g bytes =
+    let (mode, g') = randomMode g   -- Random mode
+        (key, g'') = newAESKey g'   -- Random key
+    in case mode of
+        ECB -> (mode, encryptECB key bytes, g'')
+        CBC ->
+            let (iv, g''') = newAESIV g''   -- Random IV
+            in (mode, encryptCBC key iv bytes, g''')

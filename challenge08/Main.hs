@@ -11,4 +11,4 @@ main = do
 
     path <- getDataFileName "8.txt"
     xs <- map (hexDecode . fromJust . hexString) . lines <$> readFile path
-    print $ detectAES128ECB xs
+    print $ detectECB xs

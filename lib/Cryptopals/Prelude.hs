@@ -11,6 +11,7 @@ module Cryptopals.Prelude
     , minimumBy
     , on
     , popCount
+    , replicateM_
     , toLower
     , toUpper
     , unfoldr
