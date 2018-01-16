@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Cryptopals.Algos
     ( AESIV
     , AESKey
@@ -5,6 +7,7 @@ module Cryptopals.Algos
     , aesChunkSize
     , aesIV
     , aesKey
+    , breakEBC
     , decryptXORString
     , decryptCBC
     , decryptECB
@@ -25,12 +28,14 @@ import           Codec.Crypto.SimpleAES (Direction(..), Mode(..), crypt)
 import           Cryptopals.Prelude
 import           Cryptopals.Util
 import           Cryptopals.XOR
-import qualified Data.ByteString as ByteString (concat, length)
+import qualified Data.ByteString as ByteString (append, concat, length, take)
 import           Data.ByteString.Char8 (ByteString)
-import qualified Data.ByteString.Char8 as Char8 (pack, replicate)
+import qualified Data.ByteString.Char8 as Char8 (pack, replicate, snoc, unpack)
 import qualified Data.ByteString.Lazy as Lazy (fromStrict, toStrict)
-import qualified Data.HashMap.Strict as HashMap (empty, insertWith)
+import qualified Data.HashMap.Strict as HashMap (empty, insert, insertWith, lookup)
 import           System.Random (Random, RandomGen, random, randomR)
+
+type Encryptor = ByteString -> ByteString
 
 newtype AESKey = AESKey ByteString deriving Show
 newtype AESIV = AESIV ByteString deriving Show
@@ -164,8 +169,8 @@ newAESIV g =
 
 randomMode :: RandomGen a => a -> (Mode, a)
 randomMode g =
-    let (isECB, g') = randomR (False, True) g
-    in if isECB then (ECB, g') else (CBC, g')
+    let (isECB', g') = randomR (False, True) g
+    in if isECB' then (ECB, g') else (CBC, g')
 
 encryptionOracle :: RandomGen a => a -> ByteString -> (Mode, ByteString, a)
 encryptionOracle g bytes =
@@ -176,3 +181,43 @@ encryptionOracle g bytes =
         CBC ->
             let (iv, g''') = newAESIV g''   -- Random IV
             in (mode, encryptCBC key iv bytes, g''')
+
+isECB :: Int -> Encryptor -> Bool
+isECB chunkSize encryptor =
+    let ciphertext = encryptor (Char8.replicate (2 * chunkSize) '\0')
+        x0 : x1 : _ = chunksOf chunkSize $ Char8.unpack ciphertext
+    in x0 == x1
+
+breakEBC :: Encryptor -> (Int, Bool, ByteString)
+breakEBC f =
+    let lengths = map (\i -> ByteString.length $ f (Char8.replicate i '\0')) [0..]
+        transitions = zipWith (-) (drop 1 lengths) lengths
+        chunkSize = head $ dropWhile (== 0) transitions
+        Just offset = findIndex (/= 0) transitions
+        plaintextLength = head lengths - offset
+    in
+        (chunkSize, isECB chunkSize f,
+            foldl'
+                (\found i -> Char8.snoc found (bruteForce chunkSize f i found))
+                ""
+                [1..plaintextLength])
+
+prefixLength :: Int -> Int -> Int
+prefixLength chunkSize i =  chunkSize - (i - 1) `mod` chunkSize - 1
+
+bruteForce :: Int -> Encryptor -> Int -> ByteString -> Char
+bruteForce chunkSize encryptor index found =
+    let pl = prefixLength chunkSize index
+        targetSize = (1 + (index - 1) `quot` chunkSize) * chunkSize
+        target = ByteString.take targetSize $ encryptor (Char8.replicate pl '\0')
+        prefix = ByteString.append (Char8.replicate pl '\0') found
+        dict =
+            foldr
+                (\x m ->
+                    let plaintext = Char8.snoc prefix (chr x)
+                        ciphertext = encryptor plaintext
+                    in HashMap.insert (ByteString.take targetSize ciphertext) x m)
+                HashMap.empty
+                [0..255]
+        c = fromJust $ HashMap.lookup target dict
+    in chr c

@@ -11,7 +11,6 @@ main :: IO ()
 main = do
     putStrLn "challenge07"
 
-    Just s <- readBase64DataFile "7.txt"
-    let bytes = Char8.pack s
-        key = fromJust $ aesKey "YELLOW SUBMARINE"
+    bytes <- fromJust <$> readBase64DataFile "7.txt"
+    let key = fromJust $ aesKey "YELLOW SUBMARINE"
     print $ decryptECB key bytes

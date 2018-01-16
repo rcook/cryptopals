@@ -12,6 +12,8 @@ module Cryptopals.Base64
 
 import           Cryptopals.Prelude
 import           Data.Bits ((.&.), shift)
+import           Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as Char8 (pack)
 import           Data.List (elemIndex)
 import           Paths_cryptopals
 
@@ -95,15 +97,15 @@ decodeChunk c0 c1 c2 c3 =
 decodeOctet :: Char -> Int
 decodeOctet c = fromJust $ c `elemIndex` base64Chars
 
-base64Decode :: Base64String -> String
-base64Decode s = concat (base64DecodeHelper (unBase64String s))
+base64Decode :: Base64String -> ByteString
+base64Decode s = Char8.pack $ concat (base64DecodeHelper (unBase64String s))
 
 base64DecodeHelper :: String -> [String]
 base64DecodeHelper [] = []
 base64DecodeHelper (c0 : c1 : c2 : c3 : cs) = decodeChunk c0 c1 c2 c3 : base64DecodeHelper cs
 base64DecodeHelper _ = error "Invalid Base64-encoded string"
 
-readBase64DataFile :: FilePath -> IO (Maybe String)
+readBase64DataFile :: FilePath -> IO (Maybe ByteString)
 readBase64DataFile fileName = do
         dataPath <- getDataFileName fileName
         xs <- (concat . lines) <$> readFile dataPath

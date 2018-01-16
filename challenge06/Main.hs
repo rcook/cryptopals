@@ -2,8 +2,9 @@
 
 module Main (main) where
 
-import Cryptopals
-import Data.List (minimumBy, transpose)
+import           Cryptopals
+import qualified Data.ByteString.Char8 as Char8 (unpack)
+import           Data.List (minimumBy, transpose)
 
 normalizedDist :: Int -> String -> Double
 normalizedDist keySize s =
@@ -22,7 +23,7 @@ main = do
     let plaintext = "The ineffable talent for finding patterns in chaos cannot do its thing unless he immerses himself in the chaos first. If they do contain patterns, he does not see them just now, in any rational way. But there may be some subrational part of his mind that can go to work, now that the letters have passed before his eyes and through his pencil, and that may suddenly present him with a gift-wrapped clue--or even a full solution--a few weeks from now while he is shaving or antenna-twiddling."
         plainChar = fromJust $ mostCommonChar plaintext
 
-    Just s <- readBase64DataFile "6.txt"
+    s <- (Char8.unpack . fromJust) <$> readBase64DataFile "6.txt"
     let (keySize, _) = minimumBy
                             (\(_, dist0) (_, dist1) -> dist0 `compare` dist1)
                             (map (\ks -> (ks, normalizedDist ks s)) [2..40])

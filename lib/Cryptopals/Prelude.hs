@@ -2,6 +2,7 @@ module Cryptopals.Prelude
     ( catMaybes
     , chunksOf
     , chr
+    , findIndex
     , foldl'
     , forM_
     , fromJust
