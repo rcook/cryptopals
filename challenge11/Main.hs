@@ -19,5 +19,5 @@ main = do
     replicateM_ 5 $ do
         g <- newStdGen
         let (mode, ciphertext, _) = encryptionOracle g (Char8.replicate 43 '\0')
-        let isECB = ecbScore (Char8.unpack ciphertext) > 0.5
+        let isECB = ecbScore (Char8.unpack ciphertext) >= 0.5
         print $ (showMode mode, isECB)
