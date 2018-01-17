@@ -1,24 +1,33 @@
 module Cryptopals.Prelude
-    ( catMaybes
+    ( (<|>)
+    , catMaybes
     , chunksOf
     , chr
+    , elemIndex
     , findIndex
     , foldl'
     , forM_
     , fromJust
+    , intercalate
+    , isAlpha
+    , isDigit
     , isPrint
     , isSpace
     , maximumBy
     , minimumBy
     , on
     , popCount
+    , printf
+    , replicateM
     , replicateM_
     , toLower
     , toUpper
     , unfoldr
+    , void
     , xor
     ) where
 
+import           Control.Applicative
 import           Control.Monad
 import           Data.Bits
 import           Data.Char
@@ -26,3 +35,4 @@ import           Data.Function
 import           Data.List
 import           Data.List.Split
 import           Data.Maybe
+import           Text.Printf

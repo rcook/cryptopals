@@ -11,14 +11,19 @@ module Cryptopals.Algos
     , decryptXORString
     , decryptCBC
     , decryptECB
+    , decryptECBWithPadding
     , detectECB
     , ecbScore
     , encryptCBC
     , encryptECB
+    , encryptECBWithPadding
     , encryptionOracle
     , hamming
+    , inferEBCInfo
     , newAESIV
+    , newAESIVIO
     , newAESKey
+    , newAESKeyIO
     , padPKCS7
     , repeatingXOREncode
     , zeroIV
@@ -28,12 +33,12 @@ import           Codec.Crypto.SimpleAES (Direction(..), Mode(..), crypt)
 import           Cryptopals.Prelude
 import           Cryptopals.Util
 import           Cryptopals.XOR
-import qualified Data.ByteString as ByteString (append, concat, length, take)
+import qualified Data.ByteString as ByteString (append, concat, last, length, take)
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as Char8 (pack, replicate, snoc, unpack)
 import qualified Data.ByteString.Lazy as Lazy (fromStrict, toStrict)
 import qualified Data.HashMap.Strict as HashMap (empty, insert, insertWith, lookup)
-import           System.Random (Random, RandomGen, random, randomR)
+import           System.Random (Random, RandomGen, random, randomIO, randomR)
 
 type Encryptor = ByteString -> ByteString
 
@@ -62,13 +67,31 @@ hamming s0 s1 = sum $ zipWith intHamming (map fromEnum s0) (map fromEnum s1)
     where
     intHamming x0 x1 = popCount $ xor x0 x1
 
+byteStringPad :: Int -> ByteString -> ByteString
+byteStringPad chunkSize s =
+    let len = ByteString.length s
+        padding = chunkSize - len `mod` chunkSize
+    in ByteString.append s (Char8.replicate padding (chr padding))
+
+byteStringUnpad :: Int -> ByteString -> ByteString
+byteStringUnpad chunkSize s =
+    let len = ByteString.length s
+        padding = fromIntegral $ ByteString.last s
+    in if padding < 1 || padding >= chunkSize then s else ByteString.take (len - padding) s
+
 decryptECB :: AESKey -> ByteString -> ByteString
 decryptECB (AESKey key) bytes
     = Lazy.toStrict (crypt ECB key rawZeroIV Decrypt (Lazy.fromStrict bytes))
 
+decryptECBWithPadding :: AESKey -> ByteString -> ByteString
+decryptECBWithPadding key bytes = byteStringUnpad aesChunkSize $ decryptECB key bytes
+
 encryptECB :: AESKey -> ByteString -> ByteString
 encryptECB (AESKey key) bytes
     = Lazy.toStrict (crypt ECB key rawZeroIV Encrypt (Lazy.fromStrict bytes))
+
+encryptECBWithPadding :: AESKey -> ByteString -> ByteString
+encryptECBWithPadding key bytes = encryptECB key (byteStringPad aesChunkSize bytes)
 
 score :: Int -> String -> Double
 score chunkSize ciphertext =
@@ -157,6 +180,9 @@ newAESKey g =
     let (cs, g') = randomsN aesChunkSize g
     in (AESKey $ Char8.pack cs, g')
 
+newAESKeyIO :: IO AESKey
+newAESKeyIO = (AESKey . Char8.pack) <$> replicateM aesChunkSize randomIO
+
 aesIV :: ByteString -> Maybe AESIV
 aesIV s
     | ByteString.length s /= aesChunkSize = Nothing
@@ -166,6 +192,9 @@ newAESIV :: RandomGen a => a -> (AESIV, a)
 newAESIV g =
     let (cs, g') = randomsN aesChunkSize g
     in (AESIV $ Char8.pack cs, g')
+
+newAESIVIO :: IO AESIV
+newAESIVIO = (AESIV . Char8.pack) <$> replicateM aesChunkSize randomIO
 
 randomMode :: RandomGen a => a -> (Mode, a)
 randomMode g =
@@ -188,13 +217,18 @@ isECB chunkSize encryptor =
         x0 : x1 : _ = chunksOf chunkSize $ Char8.unpack ciphertext
     in x0 == x1
 
-breakEBC :: Encryptor -> (Int, Bool, ByteString)
-breakEBC f =
+inferEBCInfo :: Encryptor -> (Int, Int)
+inferEBCInfo f =
     let lengths = map (\i -> ByteString.length $ f (Char8.replicate i '\0')) [0..]
         transitions = zipWith (-) (drop 1 lengths) lengths
         chunkSize = head $ dropWhile (== 0) transitions
         Just offset = findIndex (/= 0) transitions
         plaintextLength = head lengths - offset
+    in (chunkSize, plaintextLength)
+
+breakEBC :: Encryptor -> (Int, Bool, ByteString)
+breakEBC f =
+    let (chunkSize, plaintextLength) = inferEBCInfo f
     in
         (chunkSize, isECB chunkSize f,
             foldl'

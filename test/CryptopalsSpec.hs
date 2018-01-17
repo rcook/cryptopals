@@ -180,3 +180,13 @@ spec = do
             chunkSize `shouldBe` 16
             isECBResult `shouldBe` True
             plaintext `shouldBe` targetPlaintext
+
+    describe "encryptECBWithPadding" $
+        it "pads plaintext before encrypting" $ do
+            let Just key = aesKey (Char8.replicate aesChunkSize '\1')
+            encryptECBWithPadding key "hello" `shouldBe` "LU\166\255\218.V[@\194\ENQ\GS=\ACKv\DC4"
+
+    describe "decryptECBWithPadding" $
+        it "unpads plaintext after decrypting" $ do
+            let Just key = aesKey (Char8.replicate aesChunkSize '\1')
+            decryptECBWithPadding key "LU\166\255\218.V[@\194\ENQ\GS=\ACKv\DC4" `shouldBe` "hello"
