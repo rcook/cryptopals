@@ -5,7 +5,6 @@
 module Main (main) where
 
 import           Cryptopals
-import qualified Data.ByteString.Char8 as Char8 (pack)
 
 main :: IO ()
 main = do
