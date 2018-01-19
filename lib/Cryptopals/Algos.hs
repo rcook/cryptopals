@@ -3,6 +3,7 @@
 module Cryptopals.Algos
     ( AESIV
     , AESKey
+    , Encryptor
     , Mode(..)
     , aesChunkSize
     , aesIV
