@@ -30,10 +30,11 @@ module Cryptopals.Algos
     ) where
 
 import           Codec.Crypto.SimpleAES (Direction(..), Mode(..), crypt)
+import qualified Cryptopals.ByteStringUtil as ByteStringUtil (chunksOf, pkcs7Pad, pkcs7Unpad, xor)
+import           Cryptopals.CharUtil
 import           Cryptopals.Prelude
-import           Cryptopals.Util
 import           Cryptopals.XOR
-import qualified Data.ByteString as ByteString (append, concat, last, length, take)
+import qualified Data.ByteString as ByteString (append, concat, length, take)
 import           Data.ByteString.Char8 (ByteString)
 import qualified Data.ByteString.Char8 as Char8 (pack, replicate, snoc, unpack)
 import qualified Data.ByteString.Lazy as Lazy (fromStrict, toStrict)
@@ -67,31 +68,19 @@ hamming s0 s1 = sum $ zipWith intHamming (map fromEnum s0) (map fromEnum s1)
     where
     intHamming x0 x1 = popCount $ xor x0 x1
 
-byteStringPad :: Int -> ByteString -> ByteString
-byteStringPad chunkSize s =
-    let len = ByteString.length s
-        padding = chunkSize - len `mod` chunkSize
-    in ByteString.append s (Char8.replicate padding (chr padding))
-
-byteStringUnpad :: Int -> ByteString -> ByteString
-byteStringUnpad chunkSize s =
-    let len = ByteString.length s
-        padding = fromIntegral $ ByteString.last s
-    in if padding < 1 || padding >= chunkSize then s else ByteString.take (len - padding) s
-
 decryptECB :: AESKey -> ByteString -> ByteString
 decryptECB (AESKey key) bytes
     = Lazy.toStrict (crypt ECB key rawZeroIV Decrypt (Lazy.fromStrict bytes))
 
 decryptECBWithPadding :: AESKey -> ByteString -> ByteString
-decryptECBWithPadding key bytes = byteStringUnpad aesChunkSize $ decryptECB key bytes
+decryptECBWithPadding key bytes = ByteStringUtil.pkcs7Unpad aesChunkSize (decryptECB key bytes)
 
 encryptECB :: AESKey -> ByteString -> ByteString
 encryptECB (AESKey key) bytes
     = Lazy.toStrict (crypt ECB key rawZeroIV Encrypt (Lazy.fromStrict bytes))
 
 encryptECBWithPadding :: AESKey -> ByteString -> ByteString
-encryptECBWithPadding key bytes = encryptECB key (byteStringPad aesChunkSize bytes)
+encryptECBWithPadding key bytes = encryptECB key (ByteStringUtil.pkcs7Pad aesChunkSize bytes)
 
 score :: Int -> String -> Double
 score chunkSize ciphertext =
@@ -128,12 +117,12 @@ padPKCS7 n s =
 
 encryptCBC :: AESKey -> AESIV -> ByteString -> ByteString
 encryptCBC key (AESIV iv) plaintext =
-    let chunks = byteStringChunksOf aesChunkSize plaintext
+    let chunks = ByteStringUtil.chunksOf aesChunkSize plaintext
         (_, resultChunks) =
             foldl'
                 (\(prev, xs) chunk ->
-                    let temp0 = byteStringPadPKCS7Unsafe aesChunkSize chunk
-                        temp1 = byteStringXor prev temp0
+                    let temp0 = ByteStringUtil.pkcs7Pad aesChunkSize chunk
+                        temp1 = ByteStringUtil.xor prev temp0
                         ciphertext = encryptECB key temp1
                     in (ciphertext, xs ++ [ciphertext]))
                 (iv, [])
@@ -142,13 +131,13 @@ encryptCBC key (AESIV iv) plaintext =
 
 decryptCBC :: AESKey -> AESIV -> ByteString -> ByteString
 decryptCBC key (AESIV iv) ciphertext =
-    let chunks = byteStringChunksOf aesChunkSize ciphertext
+    let chunks = ByteStringUtil.chunksOf aesChunkSize ciphertext
         (_, resultChunks) =
             foldl'
                 (\(prev, xs) chunk ->
                     let temp0 = decryptECB key chunk
-                        temp1 = byteStringXor prev temp0
-                        plaintext = byteStringUnpadPKCS7Unsafe aesChunkSize temp1
+                        temp1 = ByteStringUtil.xor prev temp0
+                        plaintext = ByteStringUtil.pkcs7Unpad aesChunkSize temp1
                     in (chunk, xs ++ [plaintext]))
                 (iv, [])
                 chunks
