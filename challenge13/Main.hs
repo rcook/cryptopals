@@ -17,11 +17,13 @@ encryptProfileFor key email =
 attack :: Encryptor -> ByteString
 attack f =
     let (chunkSize, _) = inferEBCInfo f
-        email1 = ByteString.append "foo@bar.coadmin" (Char8.replicate 11 (chr 11)) -- (length: 26)
+        email1 = ByteString.append "aaaaaaaaaaadmin" (Char8.replicate 11 (chr 11)) -- (length: 26)
         x1 = f email1
-        email2 = "foo@bar.commm" -- (length: 13)
+        adminBlock = ByteString.take chunkSize (ByteString.drop chunkSize x1)
+        email2 = "aaaaaaaaaaaaa" -- (length: 13)
         x2 = f email2
-    in ByteString.append (ByteString.take (2 * chunkSize) x2) (ByteString.take chunkSize (ByteString.drop chunkSize x1))
+        normalBlocks = ByteString.take (2 * chunkSize) x2
+    in ByteString.append normalBlocks adminBlock
 
 main :: IO ()
 main = do
@@ -45,5 +47,5 @@ main = do
 
     -- Hmm, I dunno: the padding indicates tampering!
     print plaintext
-
-    -- I don't understand this yet
+    let pairs = decodeKeyValuePairs plaintext
+    print pairs
